@@ -6,4 +6,5 @@ public class PlatformStatsDto
     public decimal AvgPrice { get; set; }
     public int NumOfCities { get; set; }
     public int NumOfVerified { get; set; }
+    public int NumOfTrainers { get; set; }
 }

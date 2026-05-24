@@ -400,7 +400,8 @@ public class UserRepository(AppDbContext context) : IUserRepository
             AvgRating = Math.Round(avgRating, 2),
             AvgPrice = Math.Round(avgPrice, 2),
             NumOfCities = numOfCities,
-            NumOfVerified = numOfVerified
+            NumOfVerified = numOfVerified,
+            NumOfTrainers = trainerIds.Count
         };
     }
 
