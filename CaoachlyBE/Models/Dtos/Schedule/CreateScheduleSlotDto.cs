@@ -6,10 +6,10 @@ namespace CaoachlyBE.Models.Dtos.Schedule;
 public class CreateScheduleSlotDto
 {
     [Required]
-    public DateTime StartTime { get; set; }
+    public DateTimeOffset StartTime { get; set; }
 
     [Required]
-    public DateTime EndTime { get; set; }
+    public DateTimeOffset EndTime { get; set; }
 
     public SlotFormat Format { get; set; }
 

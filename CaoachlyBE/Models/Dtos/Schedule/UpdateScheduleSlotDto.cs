@@ -5,8 +5,8 @@ namespace CaoachlyBE.Models.Dtos.Schedule;
 
 public class UpdateScheduleSlotDto
 {
-    public DateTime? StartTime { get; set; }
-    public DateTime? EndTime { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
     public SlotFormat? Format { get; set; }
 
     [Range(0.01, 99999.99)]

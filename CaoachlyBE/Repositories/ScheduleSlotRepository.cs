@@ -129,7 +129,7 @@ public class ScheduleSlotRepository(AppDbContext context) : IScheduleSlotReposit
         return await context.Database
             .SqlQueryRaw<Guid>("""
                 SELECT id FROM schedule_slots
-                WHERE end_time < now() AT TIME ZONE 'Europe/Kiev'
+                WHERE end_time < now() AT TIME ZONE 'Europe/Kyiv'
                   AND status <> 4
                   AND status <> 3
                 """)
@@ -158,8 +158,8 @@ public class ScheduleSlotRepository(AppDbContext context) : IScheduleSlotReposit
         var entity = await context.ScheduleSlots.FirstOrDefaultAsync(s => s.Id == id)
             ?? throw new KeyNotFoundException("Slot not found.");
 
-        if (dto.StartTime.HasValue) entity.StartTime = dto.StartTime.Value;
-        if (dto.EndTime.HasValue) entity.EndTime = dto.EndTime.Value;
+        if (dto.StartTime.HasValue) entity.StartTime = dto.StartTime.Value.DateTime;
+        if (dto.EndTime.HasValue) entity.EndTime = dto.EndTime.Value.DateTime;
         if (dto.Format.HasValue) entity.Format = (short)dto.Format.Value;
         if (dto.Price.HasValue) entity.Price = dto.Price.Value;
         if (dto.MaxClients.HasValue) entity.MaxClients = dto.MaxClients.Value;

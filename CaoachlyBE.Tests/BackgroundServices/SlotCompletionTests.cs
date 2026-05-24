@@ -33,17 +33,23 @@ public class SlotCompletionTests
         Mock<IScheduleSlotRepository>? slotRepo    = null,
         Mock<IBookingRepository>?      bookingRepo = null,
         Mock<IEmailService>?           emailService = null,
-        Mock<IUnitOfWork>?             unitOfWork  = null)
+        Mock<IUnitOfWork>?             unitOfWork  = null,
+        Mock<IAchievementService>?     achievementService = null)
     {
         slotRepo     ??= TestMocks.ScheduleSlotRepo();
         bookingRepo  ??= TestMocks.BookingRepo();
         emailService ??= TestMocks.EmailService();
         unitOfWork   ??= TestMocks.UnitOfWork();
+        achievementService ??= new Mock<IAchievementService>();
+        achievementService
+            .Setup(s => s.CheckAndAwardAsync(It.IsAny<Guid>()))
+            .ReturnsAsync(Array.Empty<int>());
 
         var provider = new Mock<IServiceProvider>();
         provider.Setup(p => p.GetService(typeof(IScheduleSlotRepository))).Returns(slotRepo.Object);
         provider.Setup(p => p.GetService(typeof(IBookingRepository))).Returns(bookingRepo.Object);
         provider.Setup(p => p.GetService(typeof(IEmailService))).Returns(emailService.Object);
+        provider.Setup(p => p.GetService(typeof(IAchievementService))).Returns(achievementService.Object);
         provider.Setup(p => p.GetService(typeof(IUnitOfWork))).Returns(unitOfWork.Object);
 
         var scope = new Mock<IServiceScope>();
@@ -164,7 +170,7 @@ public class SlotCompletionTests
     // ── unit of work ──────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task ProcessExpiredSlotsAsync_OneExpiredSlot_UowSavedOnce()
+    public async Task ProcessExpiredSlotsAsync_OneExpiredSlot_UowSaved()
     {
         var slotId      = Guid.NewGuid();
         var slotRepo    = TestMocks.ScheduleSlotRepo();
@@ -177,7 +183,7 @@ public class SlotCompletionTests
 
         await sut.ProcessExpiredSlotsAsync(CancellationToken.None);
 
-        uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.AtLeastOnce);
     }
 
     // ── review request emails ─────────────────────────────────────────────────

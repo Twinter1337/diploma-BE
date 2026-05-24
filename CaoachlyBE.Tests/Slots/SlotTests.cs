@@ -200,8 +200,8 @@ public class SlotTests
         uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
 
         capturedSlot!.TrainerId.Should().Be(_trainerId);
-        capturedSlot.StartTime.Should().Be(dto.StartTime);
-        capturedSlot.EndTime.Should().Be(dto.EndTime);
+        capturedSlot.StartTime.Should().Be(dto.StartTime.DateTime);
+        capturedSlot.EndTime.Should().Be(dto.EndTime.DateTime);
         capturedSlot.Format.Should().Be(dto.Format);
         capturedSlot.Price.Should().Be(dto.PricePerSession);
         capturedSlot.MaxClients.Should().Be(dto.MaxClients);
@@ -222,8 +222,8 @@ public class SlotTests
 
         result.Id.Should().NotBeEmpty();
         result.TrainerId.Should().Be(_trainerId);
-        result.StartTime.Should().Be(dto.StartTime);
-        result.EndTime.Should().Be(dto.EndTime);
+        result.StartTime.Should().Be(dto.StartTime.DateTime);
+        result.EndTime.Should().Be(dto.EndTime.DateTime);
         result.Format.Should().Be(dto.Format);
         result.Price.Should().Be(dto.PricePerSession);
         result.MaxClients.Should().Be(dto.MaxClients);

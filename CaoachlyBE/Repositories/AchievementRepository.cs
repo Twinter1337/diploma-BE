@@ -1,3 +1,4 @@
+using CaoachlyBE.Entities;
 using CaoachlyBE.Enums;
 using CaoachlyBE.Models;
 using CaoachlyBE.Repositories.Interfaces;
@@ -47,5 +48,71 @@ public class AchievementRepository(AppDbContext context) : IAchievementRepositor
                 IconUrl = a.IconUrl
             })
             .ToListAsync();
+    }
+
+    public async Task<ClientAchievementStats> GetClientStatsAsync(Guid clientId)
+    {
+        var bookings = await context.Bookings
+            .Where(b => b.ClientId == clientId && b.Status == (short)BookingStatus.Completed)
+            .Include(b => b.Slot)
+                .ThenInclude(s => s.Trainer)
+                    .ThenInclude(t => t.Tags)
+            .ToListAsync();
+
+        if (bookings.Count == 0)
+            return new ClientAchievementStats(0, 0, 0, 0, 0, 0, false, false, 0);
+
+        var distinctSpecializations = bookings
+            .SelectMany(b => b.Slot.Trainer.Tags)
+            .Where(t => t.Category == (short)TagCategory.Specialization)
+            .Select(t => t.Id)
+            .Distinct()
+            .Count();
+
+        var distinctCities = bookings
+            .Select(b => b.Slot.Trainer.City)
+            .Where(c => c != null)
+            .Distinct()
+            .Count();
+
+        var maxWithOneTrainer = bookings
+            .GroupBy(b => b.Slot.TrainerId)
+            .Max(g => g.Count());
+
+        var locationGroups = bookings
+            .Where(b => b.Slot.GymName != null)
+            .GroupBy(b => b.Slot.GymName)
+            .ToList();
+
+        var maxAtOneLocation = locationGroups.Count > 0
+            ? locationGroups.Max(g => g.Count())
+            : 0;
+
+        var maxInOneDay = bookings
+            .GroupBy(b => b.Slot.StartTime.Date)
+            .Max(g => g.Count());
+
+        return new ClientAchievementStats(
+            CompletedSessions: bookings.Count,
+            DistinctTrainers: bookings.Select(b => b.Slot.TrainerId).Distinct().Count(),
+            DistinctSpecializations: distinctSpecializations,
+            DistinctCities: distinctCities,
+            MaxSessionsWithOneTrainer: maxWithOneTrainer,
+            MaxSessionsAtOneLocation: maxAtOneLocation,
+            HasEarlyMorningSession: bookings.Any(b => b.Slot.StartTime.Hour < 8),
+            HasLateEveningSession: bookings.Any(b => b.Slot.StartTime.Hour >= 20),
+            MaxSessionsInOneDay: maxInOneDay
+        );
+    }
+
+    public Task AwardAsync(Guid userId, int achievementId, DateTime earnedAt)
+    {
+        context.UserAchievements.Add(new UserAchievement
+        {
+            UserId = userId,
+            AchievementId = achievementId,
+            EarnedAt = earnedAt
+        });
+        return Task.CompletedTask;
     }
 }

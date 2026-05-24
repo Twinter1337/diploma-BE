@@ -479,20 +479,20 @@ public class TrainerService(
     {
         var changes = new List<SlotFieldChange>();
 
-        if (dto.StartTime.HasValue && dto.StartTime.Value != before.StartTime)
+        if (dto.StartTime.HasValue && dto.StartTime.Value.DateTime != before.StartTime)
             changes.Add(new SlotFieldChange
             {
                 Field = "Start time",
                 Before = before.StartTime.ToString("dd MMM yyyy, HH:mm"),
-                After = dto.StartTime.Value.ToString("dd MMM yyyy, HH:mm")
+                After = dto.StartTime.Value.DateTime.ToString("dd MMM yyyy, HH:mm")
             });
 
-        if (dto.EndTime.HasValue && dto.EndTime.Value != before.EndTime)
+        if (dto.EndTime.HasValue && dto.EndTime.Value.DateTime != before.EndTime)
             changes.Add(new SlotFieldChange
             {
                 Field = "End time",
                 Before = before.EndTime.ToString("dd MMM yyyy, HH:mm"),
-                After = dto.EndTime.Value.ToString("dd MMM yyyy, HH:mm")
+                After = dto.EndTime.Value.DateTime.ToString("dd MMM yyyy, HH:mm")
             });
 
         if (dto.Format.HasValue && dto.Format.Value != before.Format)
@@ -549,26 +549,29 @@ public class TrainerService(
         if (user.Id != requestingUserId)
             throw new UnauthorizedAccessException();
 
-        if ((dto.EndTime - dto.StartTime).TotalMinutes < 60)
+        var startLocal = dto.StartTime.DateTime;
+        var endLocal = dto.EndTime.DateTime;
+
+        if ((endLocal - startLocal).TotalMinutes < 60)
             throw new ArgumentException("Slot duration must be at least 60 minutes.");
 
-        if ((dto.EndTime - dto.StartTime).TotalHours > 6)
+        if ((endLocal - startLocal).TotalHours > 6)
             throw new ArgumentException("Slot duration must not exceed 6 hours.");
 
         var now = timeProvider.Now;
 
-        if (dto.StartTime <= now)
+        if (startLocal <= now)
             throw new ArgumentException("Slot start time must be in the future.");
 
-        if (await scheduleSlotRepository.HasConflictAsync(trainerId, dto.StartTime, dto.EndTime))
+        if (await scheduleSlotRepository.HasConflictAsync(trainerId, startLocal, endLocal))
             throw new InvalidOperationException("A slot already exists for this trainer at the specified date and time.");
 
         var model = new ScheduleSlotModel
         {
             Id = Guid.NewGuid(),
             TrainerId = trainerId,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
+            StartTime = startLocal,
+            EndTime = endLocal,
             Format = dto.Format,
             Price = dto.PricePerSession,
             MaxClients = dto.MaxClients,

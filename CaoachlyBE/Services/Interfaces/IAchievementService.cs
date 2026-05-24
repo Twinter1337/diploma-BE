@@ -6,4 +6,5 @@ public interface IAchievementService
 {
     Task<UserAchievementsListDto> GetUserAchievementsAsync(Guid userId);
     Task<IEnumerable<AchievementDto>> GetUnearnedAchievementsAsync(Guid userId);
+    Task<IReadOnlyList<int>> CheckAndAwardAsync(Guid userId);
 }

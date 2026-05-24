@@ -7,11 +7,13 @@ namespace CaoachlyBE.Services;
 
 public class BlobStorageService(IConfiguration configuration) : IBlobStorageService
 {
-    private readonly BlobServiceClient _client = new(configuration["AzureBlob:ConnectionString"]);
+    private BlobServiceClient? _client;
+    private BlobServiceClient Client =>
+        _client ??= new BlobServiceClient(configuration["AzureBlob:ConnectionString"]);
 
     public async Task<string> UploadAsync(Stream stream, string blobName, string contentType, string container)
     {
-        var containerClient = _client.GetBlobContainerClient(container);
+        var containerClient = Client.GetBlobContainerClient(container);
         await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
 
         var blobClient = containerClient.GetBlobClient(blobName);
@@ -23,7 +25,7 @@ public class BlobStorageService(IConfiguration configuration) : IBlobStorageServ
     public async Task DeleteAsync(string blobUrl, string container)
     {
         if (string.IsNullOrWhiteSpace(blobUrl)) return;
-        var containerClient = _client.GetBlobContainerClient(container);
+        var containerClient = Client.GetBlobContainerClient(container);
         var uri = new Uri(blobUrl);
         var prefix = $"/{container}/";
         var idx = uri.AbsolutePath.IndexOf(prefix, StringComparison.Ordinal);
@@ -45,7 +47,7 @@ public class BlobStorageService(IConfiguration configuration) : IBlobStorageServ
         var blobName = uri.AbsolutePath[(idx + prefix.Length)..];
         if (string.IsNullOrEmpty(blobName)) return blobUrl;
 
-        var blobClient = _client.GetBlobContainerClient(container).GetBlobClient(blobName);
+        var blobClient = Client.GetBlobContainerClient(container).GetBlobClient(blobName);
         if (!blobClient.CanGenerateSasUri) return blobUrl;
 
         var builder = new BlobSasBuilder
